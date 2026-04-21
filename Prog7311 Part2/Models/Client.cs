@@ -10,7 +10,7 @@
 
         public string Region { get; set; }
 
-        public virtual ICollection<Contract> Contracts { get; set; }
+        public virtual ICollection<Contract>? Contracts { get; set; }
 
 
 
