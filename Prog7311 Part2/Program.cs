@@ -1,11 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Prog7311_Part2.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHttpClient<CurrencyService>();
 builder.Services.AddDbContext<ClientContextDatabase>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ClientContextDatabase") ?? throw new InvalidOperationException("Connection string 'ClientContextDatabase' not found.")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
 
 var app = builder.Build();
 

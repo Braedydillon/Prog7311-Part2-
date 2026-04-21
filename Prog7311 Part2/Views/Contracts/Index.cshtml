@@ -63,15 +63,18 @@
             <td>
                     @if (!string.IsNullOrEmpty(item.DocumentPath))
                     {
+                        <a href="~/Contracts/@item.DocumentPath" target="_blank" class="btn btn-sm btn-info">
+                             View Signed PDF
+                        </a>
                         <a href="~/Contracts/@item.DocumentPath"
-                           target="_blank"
-                           class="btn btn-outline-primary btn-sm">
-                            📄 View PDF
+                           download="@item.DocumentPath"
+                           class="btn btn-sm btn-primary">
+                             Download
                         </a>
                     }
                     else
                     {
-                        <span class="text-muted">No document</span>
+                        <span class="text-muted">No document found</span>
                     }
             </td>
         </tr>

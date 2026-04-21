@@ -1,21 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Prog7311_Part2.Models;
+using Prog7311_Part2.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Prog7311_Part2.Controllers
 {
     public class ServiceRequestsController : Controller
     {
         private readonly ClientContextDatabase _context;
+        private readonly CurrencyService _currencyService;
 
-        public ServiceRequestsController(ClientContextDatabase context)
+        public ServiceRequestsController(ClientContextDatabase context, CurrencyService currencyService)
         {
             _context = context;
+            _currencyService = currencyService;
         }
 
         // GET: ServiceRequests
@@ -57,9 +60,19 @@ namespace Prog7311_Part2.Controllers
         private void GetCurrency()
         {
             var currencies = System.Globalization.CultureInfo.GetCultures(System.Globalization.CultureTypes.AllCultures)
-                .Where(c => !c.IsNeutralCulture)
-                .Select(c => new System.Globalization.RegionInfo(c.Name))
-                .Select(r => r.ISOCurrencySymbol)
+                // 1. Filter out neutral cultures and the Invariant Culture (ID 127 / 0x7F)
+                .Where(c => !c.IsNeutralCulture && c.LCID != 127)
+                .Select(c => {
+                    try
+                    {
+                        return new System.Globalization.RegionInfo(c.Name).ISOCurrencySymbol;
+                    }
+                    catch
+                    {
+                        return null; // Skip anything that fails
+                    }
+                })
+                .Where(symbol => !string.IsNullOrEmpty(symbol))
                 .Distinct()
                 .OrderBy(s => s)
                 .ToList();
@@ -83,25 +96,34 @@ namespace Prog7311_Part2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ServiceRequestId,Description,Status,Cost,ContractId")] ServiceRequest serviceRequest)
+        public async Task<IActionResult> Create([Bind("ServiceRequestId,Description,Status,Cost,ContractId")] ServiceRequest serviceRequest, string SourceCurrency)
         {
-            var contract = _context.Contract.Find(serviceRequest.ContractId);
+            var contract = await _context.Contract.FindAsync(serviceRequest.ContractId);
+            bool isBlocked = contract?.Status == ContractStatus.Expired || contract?.Status == ContractStatus.OnHold;
 
-            // Guard Clause
-            if (contract?.Status == ContractStatus.Expired|| contract?.Status ==ContractStatus.OnHold)
+            if (isBlocked)
             {
-                ModelState.AddModelError("", "Cannot create requests for Expired or Hold-On contracts!");
+                ModelState.AddModelError("", "Cannot create requests for Expired or On-Hold contracts!");
             }
 
-            if (ModelState.IsValid && contract?.Status != ContractStatus.Expired)
+            if (ModelState.IsValid && !isBlocked)
             {
+                // --- THE FIX IS HERE ---
+                // 1. Call the service to get the ZAR value
+                decimal zarAmount = await _currencyService.ConvertToZAR(serviceRequest.Cost, SourceCurrency);
+
+                // 2. OVERWRITE the Cost with the ZAR version
+                serviceRequest.Cost = zarAmount;
+
+                // 3. NOW save to the database
                 _context.Add(serviceRequest);
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
 
-            // REFILL THE DATA SO THE BOX ISN'T BLANK ON REFRESH
             PopulateContractData();
+            GetCurrency();
             return View(serviceRequest);
         }
 
