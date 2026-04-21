@@ -54,6 +54,18 @@ namespace Prog7311_Part2.Controllers
                 Stat = c.Status.ToString()
             }).ToList();
         }
+        private void GetCurrency()
+        {
+            var currencies = System.Globalization.CultureInfo.GetCultures(System.Globalization.CultureTypes.AllCultures)
+                .Where(c => !c.IsNeutralCulture)
+                .Select(c => new System.Globalization.RegionInfo(c.Name))
+                .Select(r => r.ISOCurrencySymbol)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList();
+
+            ViewBag.Currencies = new SelectList(currencies);
+        }
 
 
 
@@ -61,6 +73,7 @@ namespace Prog7311_Part2.Controllers
         public IActionResult Create()
         {
             PopulateContractData();
+            GetCurrency();
             return View();
 
         }
@@ -75,9 +88,9 @@ namespace Prog7311_Part2.Controllers
             var contract = _context.Contract.Find(serviceRequest.ContractId);
 
             // Guard Clause
-            if (contract?.Status == ContractStatus.Expired)
+            if (contract?.Status == ContractStatus.Expired|| contract?.Status ==ContractStatus.OnHold)
             {
-                ModelState.AddModelError("", "Cannot create requests for Expired contracts!");
+                ModelState.AddModelError("", "Cannot create requests for Expired or Hold-On contracts!");
             }
 
             if (ModelState.IsValid && contract?.Status != ContractStatus.Expired)

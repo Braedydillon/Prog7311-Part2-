@@ -18,7 +18,12 @@
 
         public ContractStatus Status { get; set; }
 
+              
+
         public string Servicelevel { get; set; }
+
+
+        public string? DocumentPath { get; set; } // Stores the PDF filename
 
 
         public int ClientId { get; set; }

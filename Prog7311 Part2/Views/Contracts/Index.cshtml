@@ -29,6 +29,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.Client)
             </th>
+            <th>
+                Signed Agreement
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -56,6 +59,20 @@
                 <a asp-action="Edit" asp-route-id="@item.ContractId">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.ContractId">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.ContractId">Delete</a>
+            </td>
+            <td>
+                    @if (!string.IsNullOrEmpty(item.DocumentPath))
+                    {
+                        <a href="~/Contracts/@item.DocumentPath"
+                           target="_blank"
+                           class="btn btn-outline-primary btn-sm">
+                            📄 View PDF
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No document</span>
+                    }
             </td>
         </tr>
 }

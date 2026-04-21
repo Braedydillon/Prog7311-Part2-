@@ -41,9 +41,17 @@
                 <label asp-for="ClientId" class="control-label"></label>
                 <select asp-for="ClientId" class ="form-control" asp-items="ViewBag.ClientId"></select>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
+           
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="control-label">Upload Signed Contract (PDF)</label>
+                    <input type="file" name="contractFile" class="form-control" accept=".pdf" />
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Create" class="btn btn-primary" />
+                </div>
+            </form>
         </form>
     </div>
 </div>

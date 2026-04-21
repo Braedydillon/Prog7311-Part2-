@@ -23,10 +23,17 @@
                 <input asp-for="Status" class="form-control" />
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div>
+            <div class="form-group">
+                <label class="control-label">Source Currency</label>
+                <select name="SourceCurrency" class="form-control" asp-items="ViewBag.Currencies">
+                    <option value="USD">USD - US Dollar</option>
+                </select>
+                <small class="text-muted">Will be converted to ZAR.</small>
+            </div>
 
             <div class="form-group">
-                <label asp-for="Cost" class="control-label"></label>
-                <input asp-for="Cost" class="form-control" />
+                <label asp-for="Cost" class="control-label">Amount (Foreign)</label>
+                <input asp-for="Cost" class="form-control" type="number" step="0.01" />
                 <span asp-validation-for="Cost" class="text-danger"></span>
             </div>
 
@@ -48,6 +55,12 @@
                     }
                 </select>
             </div>
+            <div class="form-group">
+    <label class="control-label">Source Currency</label>
+    <select name="SourceCurrency" class="form-control select2" asp-items="ViewBag.Currencies">
+        <option value="USD">USD - US Dollar</option> </select>
+    <small class="text-muted">The API will convert this value to ZAR automatically.</small>
+</div>
 
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
@@ -75,9 +88,9 @@
 
             statusBox.value = status || "";
 
-            if (status === "Expired") {
+            if (status === "Expired"||status === "OnHold") {
                 statusBox.style.color = "red";
-                alert("WARNING: This contract is EXPIRED.");
+                alert("WARNING: This contract is EXPIRED Or OnHold.");
             } else {
                 statusBox.style.color = "black";
             }
