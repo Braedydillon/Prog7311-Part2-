@@ -44,11 +44,25 @@ namespace Prog7311_Part2.Controllers
             return View(serviceRequest);
         }
 
+
+        private void PopulateContractData()
+        {
+            var contracts = _context.Contract.Include(c => c.Client).ToList();
+            ViewBag.ContractList = contracts.Select(c => new {
+                Id = c.ContractId,
+                Display = $"{c.Client?.Name} - ID: {c.ContractId} - Start: {c.StartDate:yyyy-MM-dd}",
+                Stat = c.Status.ToString()
+            }).ToList();
+        }
+
+
+
         // GET: ServiceRequests/Create
         public IActionResult Create()
         {
-            ViewData["ContractId"] = new SelectList(_context.Contract, "ContractId", "ContractId");
+            PopulateContractData();
             return View();
+
         }
 
         // POST: ServiceRequests/Create
@@ -58,13 +72,23 @@ namespace Prog7311_Part2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ServiceRequestId,Description,Status,Cost,ContractId")] ServiceRequest serviceRequest)
         {
-            if (ModelState.IsValid)
+            var contract = _context.Contract.Find(serviceRequest.ContractId);
+
+            // Guard Clause
+            if (contract?.Status == ContractStatus.Expired)
+            {
+                ModelState.AddModelError("", "Cannot create requests for Expired contracts!");
+            }
+
+            if (ModelState.IsValid && contract?.Status != ContractStatus.Expired)
             {
                 _context.Add(serviceRequest);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ContractId"] = new SelectList(_context.Contract, "ContractId", "ContractId", serviceRequest.ContractId);
+
+            // REFILL THE DATA SO THE BOX ISN'T BLANK ON REFRESH
+            PopulateContractData();
             return View(serviceRequest);
         }
 
@@ -81,7 +105,7 @@ namespace Prog7311_Part2.Controllers
             {
                 return NotFound();
             }
-            ViewData["ContractId"] = new SelectList(_context.Contract, "ContractId", "ContractId", serviceRequest.ContractId);
+            ViewData["ContractId"] = new SelectList(_context.Contract, "ContractId", "Status", serviceRequest.ContractId);
             return View(serviceRequest);
         }
 
@@ -117,7 +141,7 @@ namespace Prog7311_Part2.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ContractId"] = new SelectList(_context.Contract, "ContractId", "ContractId", serviceRequest.ContractId);
+            ViewData["ContractId"] = new SelectList(_context.Contract, "ContractId", "Status", serviceRequest.ContractId);
             return View(serviceRequest);
         }
 

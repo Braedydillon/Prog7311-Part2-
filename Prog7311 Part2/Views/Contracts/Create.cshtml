@@ -7,6 +7,10 @@
 <h1>Create</h1>
 
 <h4>Contract</h4>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -14,7 +18,7 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="StartDate" class="control-label"></label>
-                <input asp-for="StartDate" class="form-control" />
+                <input asp-for="StartDate" type="date" class="form-control" />
                 <span asp-validation-for="StartDate" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -24,8 +28,9 @@
             </div>
             <div class="form-group">
                 <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
+                <select asp-for="Status" class="form-control" asp-items="ViewBag.StatusOptions">
+                    <option value="">-- Select Status --</option>
+                </select>
             </div>
             <div class="form-group">
                 <label asp-for="Servicelevel" class="control-label"></label>

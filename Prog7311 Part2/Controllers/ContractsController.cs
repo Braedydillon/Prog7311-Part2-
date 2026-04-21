@@ -48,7 +48,22 @@ namespace Prog7311_Part2.Controllers
         public IActionResult Create()
         {
             ViewData["ClientId"] = new SelectList(_context.Client, "ClientId", "Name");
+
+
+            var statusList = Enum.GetValues(typeof(ContractStatus))
+                         .Cast<ContractStatus>()
+                         .Select(s => new SelectListItem
+                         {
+                             Text = s.ToString(),
+                             Value = ((int)s).ToString()
+                         }).ToList();
+
+            ViewBag.StatusOptions = statusList;
+
+
+
             return View();
+
         }
 
         // POST: Contracts/Create
@@ -65,6 +80,9 @@ namespace Prog7311_Part2.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["ClientId"] = new SelectList(_context.Client, "ClientId", "Name", contract.ClientId);
+
+            ViewBag.StatusOptions = new SelectList(Enum.GetValues(typeof(ContractStatus)));
+
             return View(contract);
         }
 

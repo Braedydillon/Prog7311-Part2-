@@ -12,6 +12,6 @@
 
         public int ContractId { get; set; }
 
-        public virtual Contract Contract { get; set; }
+        public virtual Contract? Contract { get; set; }
     }
 }

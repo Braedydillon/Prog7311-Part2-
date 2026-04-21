@@ -1,5 +1,7 @@
 ﻿@model IEnumerable<Prog7311_Part2.Models.Contract>
 
+@using Prog7311_Part2.Models
+
 @{
     ViewData["Title"] = "Index";
 }
@@ -40,13 +42,15 @@
                 @Html.DisplayFor(modelItem => item.EndDate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Status)
+                    <span class="badge @(item.Status == ContractStatus.Active ? "bg-success" : "bg-secondary")">
+                        @item.Status
+                    </span>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Servicelevel)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Client.ClientId)
+                @Html.DisplayFor(modelItem => item.Client.Name)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.ContractId">Edit</a> |

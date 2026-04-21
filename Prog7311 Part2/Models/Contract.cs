@@ -16,13 +16,13 @@
 
         public DateOnly EndDate { get; set; }
 
-        public string Status { get; set; }
+        public ContractStatus Status { get; set; }
 
         public string Servicelevel { get; set; }
 
 
         public int ClientId { get; set; }
-        public virtual Client Client { get; set; }
+        public virtual Client? Client { get; set; }
         public virtual ICollection<ServiceRequest>? ServiceRequests { get; set; }
 
     }
