@@ -5,7 +5,43 @@
 @{
     ViewData["Title"] = "Index";
 }
+<div class="card bg-light mb-4">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
 
+            <div class="col-md-3">
+                <label class="form-label font-weight-bold">Start Date</label>
+                <input type="date" name="startDate" class="form-control" value="@Context.Request.Query["startDate"]" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label font-weight-bold">End Date</label>
+                <input type="date" name="endDate" class="form-control" value="@Context.Request.Query["endDate"]" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label font-weight-bold">Contract Status</label>
+                <select name="status" class="form-control" asp-items="Html.GetEnumSelectList<ContractStatus>()">
+                    <option value="">-- All Statuses --</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <div class="btn-group w-100">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Clear
+                    </a>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<h1 class="display-4">Contracts</h1>
 <h1>Index</h1>
 
 <p>

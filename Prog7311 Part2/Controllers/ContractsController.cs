@@ -1,49 +1,38 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using Prog7311_Part2.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Prog7311_Part2.Repositories;
 
 namespace Prog7311_Part2.Controllers
 {
     public class ContractsController : Controller
     {
-        private readonly ClientContextDatabase _context;
+        private readonly IContractRepository _repo;
         private readonly IWebHostEnvironment _hostEnvironment;
+        private readonly ClientContextDatabase _context; // Keep ONLY for SelectLists
 
-        public ContractsController(ClientContextDatabase context, IWebHostEnvironment hostEnvironment)
+        public ContractsController(IContractRepository repo, IWebHostEnvironment hostEnvironment, ClientContextDatabase context)
         {
-            _context = context;
+            _repo = repo;
             _hostEnvironment = hostEnvironment;
+            _context = context;
         }
 
         // GET: Contracts
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(DateTime? start, DateTime? end, ContractStatus? status)
         {
-            var clientContextDatabase = _context.Contract.Include(c => c.Client);
-            return View(await clientContextDatabase.ToListAsync());
-
+            var data = await _repo.GetFilteredAsync(start, end, status);
+            return View(data);
         }
 
         // GET: Contracts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var contract = await _context.Contract
-                .Include(c => c.Client)
-                .FirstOrDefaultAsync(m => m.ContractId == id);
-            if (contract == null)
-            {
-                return NotFound();
-            }
+            var contract = await _repo.GetByIdAsync(id.Value);
+            if (contract == null) return NotFound();
 
             return View(contract);
         }
@@ -53,92 +42,89 @@ namespace Prog7311_Part2.Controllers
         {
             ViewData["ClientId"] = new SelectList(_context.Client, "ClientId", "Name");
 
-
+            // This converts your Enum into a list the dropdown can actually read
             var statusList = Enum.GetValues(typeof(ContractStatus))
-                         .Cast<ContractStatus>()
-                         .Select(s => new SelectListItem
-                         {
-                             Text = s.ToString(),
-                             Value = ((int)s).ToString()
-                         }).ToList();
+                                 .Cast<ContractStatus>()
+                                 .Select(s => new SelectListItem
+                                 {
+                                     Text = s.ToString(),
+                                     Value = ((int)s).ToString()
+                                 }).ToList();
 
             ViewBag.StatusOptions = statusList;
 
-
-
             return View();
-
         }
 
-        // POST: Contracts/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ContractId,StartDate,EndDate,Status,Servicelevel,ClientId,DocumentPath")] Contract contract, IFormFile? contractFile)
+        public async Task<IActionResult> Create(Contract contract, IFormFile? contractFile)
         {
-            // STEP 2: Handle the physical file save
             if (contractFile != null && contractFile.Length > 0)
             {
-                string folderPath = Path.Combine(_hostEnvironment.WebRootPath, "Contracts");
-                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
                 string fileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(contractFile.FileName);
-                string filePath = Path.Combine(folderPath, fileName);
+                string path = Path.Combine(_hostEnvironment.WebRootPath, "Contracts", fileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                using (var stream = new FileStream(path, FileMode.Create))
                 {
                     await contractFile.CopyToAsync(stream);
                 }
-
-                // STEP 3: Assign the string to the model property
                 contract.DocumentPath = fileName;
             }
 
-            // STEP 4: Force the save (Ignore the validation errors that are blocking you)
-            try
+            ModelState.Remove("Client"); // Prevents validation failure on nav property
+
+            if (ModelState.IsValid)
             {
-                _context.Add(contract);
-                await _context.SaveChangesAsync();
+                await _repo.AddAsync(contract);
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                // If it fails here, your Database schema is likely missing the column
-                return Content("Database Error: " + ex.Message);
-            }
-        
-        
+
+            ViewData["ClientId"] = new SelectList(_context.Client, "ClientId", "Name", contract.ClientId);
+            return View(contract);
         }
-        // POST: Contracts/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
+        // GET: Contracts/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var contract = await _repo.GetByIdAsync(id.Value);
+            if (contract == null) return NotFound();
+
+            // This converts your Enum into a list the dropdown can actually read
+            var statusList = Enum.GetValues(typeof(ContractStatus))
+                                 .Cast<ContractStatus>()
+                                 .Select(s => new SelectListItem
+                                 {
+                                     Text = s.ToString(),
+                                     Value = ((int)s).ToString()
+                                 }).ToList();
+
+            ViewBag.StatusOptions = statusList;
+
+            ViewData["ClientId"] = new SelectList(_context.Client, "ClientId", "Name", contract.ClientId);
+            return View(contract);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ContractId,StartDate,EndDate,Status,Servicelevel,ClientId")] Contract contract)
+        public async Task<IActionResult> Edit(int id, [Bind("ContractId,StartDate,EndDate,Status,Servicelevel,ClientId,DocumentPath")] Contract contract)
         {
-            if (id != contract.ContractId)
-            {
-                return NotFound();
-            }
+            if (id != contract.ContractId) return NotFound();
+
+            ModelState.Remove("Client");
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(contract);
-                    await _context.SaveChangesAsync();
+                    await _repo.UpdateAsync(contract);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ContractExists(contract.ContractId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!_repo.ContractExists(contract.ContractId)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -149,18 +135,10 @@ namespace Prog7311_Part2.Controllers
         // GET: Contracts/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var contract = await _context.Contract
-                .Include(c => c.Client)
-                .FirstOrDefaultAsync(m => m.ContractId == id);
-            if (contract == null)
-            {
-                return NotFound();
-            }
+            var contract = await _repo.GetByIdAsync(id.Value);
+            if (contract == null) return NotFound();
 
             return View(contract);
         }
@@ -170,19 +148,8 @@ namespace Prog7311_Part2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var contract = await _context.Contract.FindAsync(id);
-            if (contract != null)
-            {
-                _context.Contract.Remove(contract);
-            }
-
-            await _context.SaveChangesAsync();
+            await _repo.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool ContractExists(int id)
-        {
-            return _context.Contract.Any(e => e.ContractId == id);
         }
     }
 }

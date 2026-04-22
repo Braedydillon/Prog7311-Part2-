@@ -1,9 +1,9 @@
-﻿using Prog7311_Part2.Models;
-using System.Net.Http.Json; // Make sure this is here for GetFromJsonAsync
+﻿using System.Net.Http.Json;
 
 namespace Prog7311_Part2.Services
 {
-    public class CurrencyService
+    // This implements your ICurrencyService interface
+    public class CurrencyService : ICurrencyService
     {
         private readonly HttpClient _httpClient;
 
@@ -14,20 +14,36 @@ namespace Prog7311_Part2.Services
 
         public async Task<decimal> ConvertToZAR(decimal amount, string fromCurrency)
         {
-            // Using the API URL structure that matches your ExchangeRateResponse model
-            // Replace YOUR_API_KEY with your actual key if using exchangerate-api.com
-            string url = $"https://v6.exchangerate-api.com/v6/43ee498784381b01875dbe0e/pair/{fromCurrency}/ZAR/{amount}";
+            // If it's already ZAR, don't bother calling the API
+            if (fromCurrency == "ZAR") return amount;
 
-            var response = await _httpClient.GetFromJsonAsync<ExchangeRateResponse>(url);
-
-            // Logic: If the API says success, return the converted money value
-            if (response != null && response.result == "success")
+            try
             {
-                return response.conversion_result; 
+                // Replace this with your actual API key from ExchangeRate-API
+                string apiKey = "YOUR_API_KEY_HERE"; 
+                string url = $"https://v6.exchangerate-api.com/v6/43ee498784381b01875dbe0e/pair/{fromCurrency}/ZAR/{amount}";
+
+                var response = await _httpClient.GetFromJsonAsync<ExchangeRateResponse>(url);
+
+                if (response != null && response.conversion_result != 0)
+                {
+                    return (decimal)response.conversion_result;
+                }
+            }
+            catch (Exception)
+            {
+                // Fallback: If API fails, return original amount so the app doesn't break
+                return amount;
             }
 
-            // Fallback: If the API fails, return the original amount so the app doesn't crash
             return amount;
         }
+    }
+
+    // Helper class to map the API response
+    public class ExchangeRateResponse
+    {
+        public string result { get; set; }
+        public double conversion_result { get; set; }
     }
 }

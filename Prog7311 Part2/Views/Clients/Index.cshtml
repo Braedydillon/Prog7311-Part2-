@@ -3,6 +3,28 @@
 @{
     ViewData["Title"] = "Index";
 }
+<div class="card bg-light mb-4 shadow-sm">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label font-weight-bold">Search Clients</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                    </div>
+                    <input type="text" name="searchString" class="form-control" placeholder="Search by name or email..." value="@Context.Request.Query["searchString"]" />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="btn-group w-100">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 
 <h1>Index</h1>
 

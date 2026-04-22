@@ -4,9 +4,9 @@
     {
         public int ServiceRequestId { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
-        public string Status { get; set; }
+        public string? Status { get; set; }
 
         public decimal Cost { get; set; }
 

@@ -1,8 +1,14 @@
-﻿using Prog7311_Part2.Services;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Prog7311_Part2.Repositories;
+using Prog7311_Part2.Services;
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddHttpClient<CurrencyService>();
+builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(); 
+builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IServiceRequestRepository, ServiceRequestRepository>();
+
+
 builder.Services.AddDbContext<ClientContextDatabase>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ClientContextDatabase") ?? throw new InvalidOperationException("Connection string 'ClientContextDatabase' not found.")));
 

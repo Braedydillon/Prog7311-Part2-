@@ -3,7 +3,25 @@
 @{
     ViewData["Title"] = "Index";
 }
-
+<div class="card bg-light mb-4 shadow-sm border-left-primary">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label font-weight-bold">Description Search</label>
+                <input type="text" name="searchString" class="form-control" placeholder="What are you looking for?" value="@Context.Request.Query["searchString"]" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label font-weight-bold">Filter Status</label>
+                <select name="status" class="form-control" asp-items="Html.GetEnumSelectList<Prog7311_Part2.Models.ContractStatus>()">
+                    <option value="">-- All Statuses --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary btn-block">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+</div>
 <h1>Index</h1>
 
 <p>
@@ -15,9 +33,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.Description)
             </th>
-            <th>
+           @*  <th>
                 @Html.DisplayNameFor(model => model.Status)
-            </th>
+            </th> *@
             <th>
                 @Html.DisplayNameFor(model => model.Cost)
             </th>
@@ -33,9 +51,9 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Description)
             </td>
-            <td>
+            @* <td>
                 @Html.DisplayFor(modelItem => item.Status)
-            </td>
+            </td> *@
             <td>
                 @Html.DisplayFor(modelItem => item.Cost)
             </td>
